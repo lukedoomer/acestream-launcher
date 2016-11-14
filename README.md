@@ -4,7 +4,7 @@ This is a fork of Acestream Launcher which does not start Acestream Engine by it
 This fork also remove desktop notification and its dependency.
 
 ## Dependencies
-    python, python-psutil, python-pexpect, acestream-engine
+    python, python-psutil, python-pexpect
 
 ## Usage
     acestream-launcher URL [--player PLAYER] [--engine IP:PORT]
