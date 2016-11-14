@@ -9,7 +9,6 @@ import hashlib
 import argparse
 import psutil
 import pexpect
-import notify2
 
 class AcestreamLauncher(object):
     """Acestream Launcher"""
@@ -25,19 +24,9 @@ class AcestreamLauncher(object):
             help='the acestream url to play'
         )
         parser.add_argument(
-            '--engine-path',
-            help='the acestream engine executable to use (default: system)',
-            default='/usr/bin/acestreamengine'
-        )
-        parser.add_argument(
-            '--lib-path',
-            help='the acestream engine library path to use (default: system)',
-            default='/usr/share/acestream/lib'
-        )
-        parser.add_argument(
-            '--client',
-            help='the acestream engine client to use (default: console)',
-            default='console'
+            '--engine',
+            help='the acestream engine socket to use (default: localhost:62062)',
+            default='localhost:62062'
         )
         parser.add_argument(
             '--player',
@@ -48,57 +37,16 @@ class AcestreamLauncher(object):
         self.appname = 'Acestream Launcher'
         self.args = parser.parse_args()
 
-        notify2.init(self.appname)
-        self.notifier = notify2.Notification(self.appname)
-
-        self.start_acestream()
         self.start_session()
         self.start_player()
         self.close_player()
-
-    def notify(self, message):
-        """Show player status notifications"""
-
-        icon = self.args.player
-        messages = {
-            'running': 'Acestream engine running.',
-            'waiting': 'Waiting for channel response...',
-            'started': 'Streaming started. Launching player.',
-            'noauth': 'Error authenticating to Acestream!',
-            'noengine': 'Acstream engine not found in provided path!',
-            'unavailable': 'Acestream channel unavailable!'
-        }
-
-        print(messages[message])
-        self.notifier.update(self.appname, messages[message], icon)
-        self.notifier.show()
-
-    def start_acestream(self):
-        """Start acestream engine"""
-
-        for process in psutil.process_iter():
-            if 'acestreamengine' in process.name():
-                process.kill()
-
-        engine = [
-            self.args.engine_path,
-            '--lib-path ' + self.args.lib_path,
-            '--client-' + self.args.client
-        ]
-
-        try:
-            self.acestream = psutil.Popen(engine)
-            self.notify('running')
-            time.sleep(5)
-        except FileNotFoundError:
-            self.notify('noengine')
-            self.close_player(1)
 
     def start_session(self):
         """Start acestream telnet session"""
 
         product_key = 'n51LvQoTlJzNGaFxseRK-uvnvX-sD4Vm5Axwmc4UcoD-jruxmKsuJaH0eVgE'
-        session = pexpect.spawn('telnet localhost 62062')
+        self.socketArgs = self.args.engine.split(':')
+        session = pexpect.spawn('telnet {0} {1}'.format(self.socketArgs[0], self.socketArgs[1]))
 
         try:
             session.timeout = 10
@@ -115,9 +63,7 @@ class AcestreamLauncher(object):
             session.expect('AUTH.*')
             session.sendline('USERDATA [{"gender": "1"}, {"age": "3"}]')
 
-            self.notify('waiting')
         except (pexpect.TIMEOUT, pexpect.EOF):
-            self.notify('noauth')
             self.close_player(1)
 
         try:
@@ -128,9 +74,7 @@ class AcestreamLauncher(object):
             self.session = session
             self.url = session.after.decode('utf-8').split()[0]
 
-            self.notify('started')
         except (pexpect.TIMEOUT, pexpect.EOF):
-            self.notify('unavailable')
             self.close_player(1)
 
     def start_player(self):
@@ -165,10 +109,6 @@ def main():
         AcestreamLauncher()
     except (KeyboardInterrupt, EOFError):
         print('Acestream Launcher exiting...')
-
-        for process in psutil.process_iter():
-            if 'acestreamengine' in process.name():
-                process.kill()
 
         sys.exit(0)
 

@@ -1,21 +1,21 @@
 # Acestream Launcher
 Acestream Launcher allows you to open Acestream links with a Media Player of your choice
+This is a fork of Acestream Launcher which does not start Acestream Engine by itself instead connect to a specified network socket.
+This fork also remove desktop notification and its dependency.
 
 ## Dependencies
-    python, python-psutil, python-pexpect, python-notify2, acestream-engine
+    python, python-psutil, python-pexpect, acestream-engine
 
 ## Usage
-    acestream-launcher URL [--client CLIENT] [--player PLAYER] [--engine-path PATH] [--lib-path PATH]
+    acestream-launcher URL [--player PLAYER] [--engine IP:PORT]
 
 ## Positional arguments
     URL               The acestream url to play
 
 ## Optional arguments
     -h, --help                  Show this help message and exit
-    --client CLIENT             The acestream engine client to use (default: console)
     --player PLAYER             The media player to use (default: vlc)
-    --engine-path ENGINE_PATH   The acestream engine executable to use (default: system)
-    --lib-path LIB_PATH         The acestream engine library path to use (default: system)
+    --engine IP:PORT   The acestream engine executable to use (default: localhost:62062)
 
 ## Installation
 Arch Linux: [AUR Package](https://aur.archlinux.org/packages/acestream-launcher)
